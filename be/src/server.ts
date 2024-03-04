@@ -1,4 +1,4 @@
-import express, { Request, Response } from "express";
+import express, { NextFunction, Request, Response } from "express";
 import { config } from "./configs/config";
 import { connectDB } from "./configs/db";
 const logger = require("morgan");
@@ -9,11 +9,28 @@ const jwt = require("jsonwebtoken");
 
 //Routes
 import userRoute from "./routes/userRoute";
-import gameRoute from "./routes/gameRoute";
+import challengeRoute from "./routes/challangeRoute";
+import questionRoute from "./routes/questionRoute";
+import answerRoute from "./routes/answerRoute";
 
 const app = express();
 
-// app.use(logger({ path: "log.txt" }));
+// ** MIDDLEWARES **
+//* CORS
+app.use(cors());
+
+//* JSON
+app.use(express.json());
+
+app.use((req, res, next) => {
+  // log request
+  Logging.info(
+    `Request URL: ${req.originalUrl} | Request Type: ${
+      req.method
+    } | Request IP: ${req.ip} | Request Time: ${new Date().toLocaleString()}`
+  );
+  next();
+});
 
 app.use("/auth", async (req: Request, res: Response) => {
   try {
@@ -31,29 +48,69 @@ app.use("/auth", async (req: Request, res: Response) => {
     res.status(401).send("Unauthorized");
   }
 });
-app.use(cors());
-app.use(express.json());
-app.use((req, res, next) => {
-  // log request
-  Logging.info(
-    `Request URL: ${req.originalUrl} | Request Type: ${
-      req.method
-    } | Request IP: ${req.ip} | Request Time: ${new Date().toLocaleString()}`
-  );
-  next();
-});
 
-app.get("/", (req: Request, res: Response) => {
+//* LOGGING
+
+//* ERROR HANDLER
+
+// **************** //
+
+// ** ROUTES **
+
+//* PING
+app.get("/ping", (req: Request, res: Response) => {
   res.send("Hello World");
 });
 
+//* USER
 app.use("/user", userRoute);
 
-app.use("/game", gameRoute);
+//* AUTH
+app.use(async (req: Request, res: Response) => {
+  try {
+    if (req.headers.authorization !== undefined) {
+      const token = req.headers.authorization.split(" ")[1];
+      const decoded = await jwt.verify(token, config.jwt.secret);
+
+      req.headers.username = decoded.username;
+      res.status(200).json({
+        message: "Authorized",
+      });
+    } else {
+      res.status(401).json({
+        message: "Unauthorized",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.status(401).json({
+      message: "Unauthorized",
+    });
+  }
+});
+
+//* CHALLENGE
+app.use("/challenge", challengeRoute);
+
+//* QUESTION
+app.use("/question", questionRoute);
+
+//* ANSWER
+app.use("/answer", answerRoute);
+
+app.use((req: Request, res: Response, next: NextFunction) => {
+  const error = new Error("not found");
+  res.status(404).json({
+    message: error.message,
+  });
+});
 
 connectDB().then((res) => {
-  app.listen(config.server.port, () => {
+  http.createServer(app).listen(config.server.port, () => {
     Logging.info(`Server is running on port ${config.server.port}`);
   });
+  // app.listen(config.server.port, () => {
+  //   Logging.info(`Server is running on port ${config.server.port}`);
+  // });
   console.log(res);
 });
