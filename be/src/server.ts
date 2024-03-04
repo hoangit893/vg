@@ -10,7 +10,6 @@ const jwt = require("jsonwebtoken");
 //Routes
 import userRoute from "./routes/userRoute";
 import gameRoute from "./routes/gameRoute";
-import { auth } from "./middlewares/auth";
 
 const app = express();
 
