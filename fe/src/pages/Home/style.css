@@ -1,0 +1,13 @@
+.home__title {
+  font-size: 1rem;
+  padding: 10px;
+  margin-left: 3rem;
+  font-weight: bold;
+}
+
+@media screen and (max-width: 768px) {
+  .home__title {
+    text-align: center;
+    margin-left: 0;
+  }
+}
