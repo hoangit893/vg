@@ -29,6 +29,12 @@ app.use((req, res, next) => {
       req.method
     } | Request IP: ${req.ip} | Request Time: ${new Date().toLocaleString()}`
   );
+
+  Logging.warning(
+    `Response Status: [${
+      res.statusCode
+    }]  Response Time: [${new Date().toLocaleString()}]`
+  );
   next();
 });
 

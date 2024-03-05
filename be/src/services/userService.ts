@@ -1,10 +1,9 @@
 import { Request, Response } from "express";
-import bcrypt from "bcrypt";
 import argon2 from "argon2";
-import User from "../models/userSchema";
+import User from "../models/User.model";
 import { config } from "../configs/config";
-import { ExpressValidator } from "express-validator";
 const jwt = require("jsonwebtoken");
+import { registerValidation } from "../helpers/validation_schema";
 
 const findByUsername = async (username: string) => {
   return User.findOne({ username: username });
@@ -40,31 +39,33 @@ const validateInput = (req: Request) => {
     error["password"] = "Password must be at least 8 characters";
   } else if (password.split(" ").length > 1) {
     error["password"] = "Password must not contain spaces";
-  } else if (password.search(/[a-z]/) < 0) {
-    error["password"] = "Password must contain at least 1 lowercase letter";
-  } else if (password.search(/[A-Z]/) < 0) {
-    error["password"] = "Password must contain at least 1 uppercase letter";
-  } else if (password.search(/[0-9]/) < 0) {
-    error["password"] = "Password must contain at least 1 number";
-  } else if (password.search(/[!@#$%^&*]/) < 0) {
-    error["password"] = "Password must contain at least 1 special character";
+  } else if (
+    password.search(/[a-z]/) < 0 ||
+    password.search(/[A-Z]/) < 0 ||
+    password.search(/[0-9]/) < 0 ||
+    password.search(/[!@#$%^&*]/) < 0
+  ) {
+    error["password"] =
+      "Password must contain at least one lowercase letter, one uppercase letter, one number, and one special character";
   }
-
   return error;
 };
 
 const createUserService = async (req: Request, res: Response) => {
-  const error = validateInput(req);
-
-  if (Object.keys(error).length > 0) {
-    res.status(400).json(error);
+  try {
+    const { error } = await registerValidation.validate(req.body);
+    console.log(error);
+  } catch (error: any) {
+    res.status(400).json({
+      error: error,
+    });
     return;
   }
 
   const { name, username, email, password } = req.body;
   const userExists = await findByUsername(username);
   if (userExists) {
-    res.status(400).send("Username already exists");
+    res.status(400).json({ message: "Username already exists" });
     return;
   }
 
@@ -76,7 +77,6 @@ const createUserService = async (req: Request, res: Response) => {
   });
   await user.save();
   const token = jwt.sign({ username: user.username }, config.jwt.secret);
-  console.log(token);
   res.status(200).json({
     token: token,
     username: user.username?.trim(),
