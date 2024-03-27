@@ -1,6 +1,10 @@
-import { create } from "domain";
 import express, { Request, Response } from "express";
-import { createUserService, loginUserService } from "../services/userService";
+import {
+  createUserService,
+  loginUserService,
+  forgotPasswordService,
+  resetPasswordService,
+} from "../services/User.services";
 
 const userRoute = express.Router();
 
@@ -19,5 +23,13 @@ userRoute.post("/create", (req: Request, res: Response) =>
 userRoute.post("/login", (req: Request, res: Response) =>
   loginUserService(req, res)
 );
+
+userRoute.post("/forgotpassword", (req: Request, res: Response) =>
+  forgotPasswordService(req, res)
+);
+
+userRoute.post("/resetpassword", (req: Request, res: Response) => {
+  resetPasswordService(req, res);
+});
 
 export default userRoute;

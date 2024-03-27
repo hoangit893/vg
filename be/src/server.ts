@@ -47,7 +47,7 @@ app.use("/auth", async (req: Request, res: Response) => {
       req.headers.username = decoded.username;
       res.status(200).send("Authorized");
     } else {
-      res.status(401).send("Unauthorized");
+      res.status(401).send("OK");
     }
   } catch (error) {
     console.log(error);
@@ -72,28 +72,28 @@ app.get("/ping", (req: Request, res: Response) => {
 app.use("/user", userRoute);
 
 //* AUTH
-app.use(async (req: Request, res: Response) => {
-  try {
-    if (req.headers.authorization !== undefined) {
-      const token = req.headers.authorization.split(" ")[1];
-      const decoded = await jwt.verify(token, config.jwt.secret);
+// app.use(async (req: Request, res: Response) => {
+//   try {
+//     if (req.headers.authorization !== undefined) {
+//       const token = req.headers.authorization.split(" ")[1];
+//       const decoded = await jwt.verify(token, config.jwt.secret);
 
-      req.headers.username = decoded.username;
-      res.status(200).json({
-        message: "Authorized",
-      });
-    } else {
-      res.status(401).json({
-        message: "Unauthorized",
-      });
-    }
-  } catch (error) {
-    console.log(error);
-    res.status(401).json({
-      message: "Unauthorized",
-    });
-  }
-});
+//       req.headers.username = decoded.username;
+//       res.status(200).json({
+//         message: "Authorized",
+//       });
+//     } else {
+//       res.status(401).json({
+//         message: "Unauthorized",
+//       });
+//     }
+//   } catch (error) {
+//     console.log(error);
+//     res.status(401).json({
+//       message: "Unauthorized",
+//     });
+//   }
+// });
 
 //* CHALLENGE
 app.use("/challenge", challengeRoute);
